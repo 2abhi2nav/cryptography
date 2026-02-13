@@ -28,9 +28,11 @@ def decrypt_number(cipher, Xa, q):
 def main():
     q = 131
     user_input = int(input("Plaintext: "))
+
     public_key, Xa = keygen(q)
     encrypted = encrypt_number(user_input, public_key)
     decrypted = decrypt_number(encrypted, Xa, q)
+    
     print(f"Public key (q, alpha, Ya): {public_key}")
     print(f"Private key (Xa): {Xa}")
     print(f"Ciphertext (C1, C2): {encrypted}")

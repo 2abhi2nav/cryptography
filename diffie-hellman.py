@@ -3,6 +3,7 @@ import math
 
 def get_primitive_roots(p):
     roots = []
+
     phi = p - 1
     factors = []
     n = phi
@@ -28,6 +29,7 @@ def get_primitive_roots(p):
             roots.append(res)
 
     return roots
+
 
 p = int(input("Enter prime number p: "))
 roots = get_primitive_roots(p)
