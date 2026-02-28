@@ -11,8 +11,8 @@ def modular_inverse(a):
     for i in range(1, modval):
         if (a * i) % modval == 1:
             return i
-    
-    return -999 
+
+    return -999
 
 def encrypt(text, a, b):
     encrypted_text = ""
@@ -24,9 +24,9 @@ def encrypt(text, a, b):
             encrypted_text += chr(C_num + ord('A'))
         else:
             encrypted_text += char
-    
+
     return encrypted_text
-    
+
 def decrypt(text, a, b):
     decrypted_text = ""
     a_inv = modular_inverse(a)
@@ -38,7 +38,7 @@ def decrypt(text, a, b):
     for char in text.upper():
         if 'A' <= char <= 'Z':
             C_num = ord(char) - ord('A')
-            
+
             P_num = (a_inv * (C_num - b + modval)) % modval 
             decrypted_text += chr(P_num + ord('A'))
         else:

@@ -1,5 +1,5 @@
-
 import math
+
 
 def get_primitive_roots(p):
     roots = []
@@ -8,7 +8,7 @@ def get_primitive_roots(p):
     factors = []
     n = phi
     d = 2
-    
+
     while d * d <= n:
         if n % d == 0:
             factors.append(d)
@@ -62,4 +62,3 @@ else:
         print("\nShared secrets match")
     else:
         print("\nShared secrets don't match")
-
