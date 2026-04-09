@@ -1,4 +1,3 @@
-import math
 
 p = 7
 g = 3
