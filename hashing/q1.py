@@ -6,29 +6,39 @@ import time
 def left_rotate(n, b):
     return ((n << b) | (n >> (32 - b))) & 0xFFFFFFFF
 
+
 def right_rotate_64(n, b):
     return ((n >> b) | (n << (64 - b))) & 0xFFFFFFFFFFFFFFFF
 
+
 def md5_manual(message):
     if isinstance(message, str):
-        message = message.encode('utf-8')
-    
-    s = [7, 12, 17, 22] * 4 + [5, 9, 14, 20] * 4 + [4, 11, 16, 23] * 4 + [6, 10, 15, 21] * 4
+        message = message.encode("utf-8")
+
+    s = (
+        [7, 12, 17, 22] * 4
+        + [5, 9, 14, 20] * 4
+        + [4, 11, 16, 23] * 4
+        + [6, 10, 15, 21] * 4
+    )
     k = [int(abs(math.sin(i + 1)) * 2**32) & 0xFFFFFFFF for i in range(64)]
-    
+
     a0, b0, c0, d0 = 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476
-    
-    msg_len_bits = (len(message) * 8) & 0xffffffffffffffff
-    message += b'\x80'
+
+    msg_len_bits = (len(message) * 8) & 0xFFFFFFFFFFFFFFFF
+    message += b"\x80"
     while (len(message) * 8) % 512 != 448:
-        message += b'\x00'
-    message += msg_len_bits.to_bytes(8, byteorder='little')
-    
+        message += b"\x00"
+    message += msg_len_bits.to_bytes(8, byteorder="little")
+
     for i in range(0, len(message), 64):
-        chunk = message[i:i+64]
-        m = [int.from_bytes(chunk[j:j+4], byteorder='little') for j in range(0, 64, 4)]
+        chunk = message[i : i + 64]
+        m = [
+            int.from_bytes(chunk[j : j + 4], byteorder="little")
+            for j in range(0, 64, 4)
+        ]
         a, b, c, d = a0, b0, c0, d0
-        
+
         for j in range(64):
             if 0 <= j <= 15:
                 f = (b & c) | ((~b) & d)
@@ -42,63 +52,74 @@ def md5_manual(message):
             else:
                 f = c ^ (b | (~d))
                 g = (7 * j) % 16
-            
+
             temp = (a + f + k[j] + m[g]) & 0xFFFFFFFF
             a, b, c, d = d, (b + left_rotate(temp, s[j])) & 0xFFFFFFFF, b, c
-            
+
         a0 = (a0 + a) & 0xFFFFFFFF
         b0 = (b0 + b) & 0xFFFFFFFF
         c0 = (c0 + c) & 0xFFFFFFFF
         d0 = (d0 + d) & 0xFFFFFFFF
-        
-    return b''.join(x.to_bytes(4, byteorder='little') for x in [a0, b0, c0, d0])
+
+    return b"".join(x.to_bytes(4, byteorder="little") for x in [a0, b0, c0, d0])
 
 
 def sha512_manual(message):
     if isinstance(message, str):
-        message = message.encode('utf-8')
-    
-    h = [0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
-         0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179]
-    
+        message = message.encode("utf-8")
+
+    h = [
+        0x6A09E667F3BCC908,
+        0xBB67AE8584CAA73B,
+        0x3C6EF372FE94F82B,
+        0xA54FF53A5F1D36F1,
+        0x510E527FADE682D1,
+        0x9B05688C2B3E6C1F,
+        0x1F83D9ABFB41BD6B,
+        0x5BE0CD19137E2179,
+    ]
+
     msg_len_bits = len(message) * 8
-    message += b'\x80'
+    message += b"\x80"
     while (len(message) * 8) % 1024 != 896:
-        message += b'\x00'
-    message += msg_len_bits.to_bytes(16, byteorder='big')
-    
+        message += b"\x00"
+    message += msg_len_bits.to_bytes(16, byteorder="big")
+
     for i in range(0, len(message), 128):
-        
-        for _ in range(80): 
+
+        for _ in range(80):
             h[0] = (h[0] + 1) & 0xFFFFFFFFFFFFFFFF
-            
-    return b''.join(x.to_bytes(8, byteorder='big') for x in h)
+
+    return b"".join(x.to_bytes(8, byteorder="big") for x in h)
 
 
 def generate_mac(key, message, hash_func, block_size):
-    if len(key) > block_size: key = hash_func(key)
-    if len(key) < block_size: key = key.ljust(block_size, b'\x00')
+    if len(key) > block_size:
+        key = hash_func(key)
+    if len(key) < block_size:
+        key = key.ljust(block_size, b"\x00")
     ipad = bytes([x ^ 0x36 for x in key])
-    opad = bytes([x ^ 0x5c for x in key])
+    opad = bytes([x ^ 0x5C for x in key])
     inner_hash = hash_func(ipad + message.encode())
     return hash_func(opad + inner_hash).hex()
+
 
 def plot_results(results):
     sizes = [r[0] for r in results]
     md5_times = [r[1] for r in results]
     sha_times = [r[2] for r in results]
     plt.figure(figsize=(10, 6))
-    plt.plot(sizes, md5_times, label='MD5', marker='o', linestyle='-', color='blue')
-    plt.plot(sizes, sha_times, label='SHA-512', marker='s', linestyle='--', color='red')
-    plt.title('Message Size vs Execution Time (Manual Implementation)')
-    plt.xlabel('Message Size (Bytes)')
-    plt.ylabel('Time Consumption (Seconds)')
+    plt.plot(sizes, md5_times, label="MD5", marker="o", linestyle="-", color="blue")
+    plt.plot(sizes, sha_times, label="SHA-512", marker="s", linestyle="--", color="red")
+    plt.title("Message Size vs Execution Time (Manual Implementation)")
+    plt.xlabel("Message Size (Bytes)")
+    plt.ylabel("Time Consumption (Seconds)")
     plt.legend()
     plt.grid(True, which="both", ls="-", alpha=0.5)
     plt.show()
 
 
-sizes = [128, 512, 1024, 8*1024, 32*1024] 
+sizes = [128, 512, 1024, 8 * 1024, 32 * 1024]
 results = []
 key = b"secret_key"
 
@@ -107,17 +128,16 @@ print("-" * 60)
 
 for size in sizes:
     msg = "A" * size
-    
+
     start = time.perf_counter()
     generate_mac(key, msg, md5_manual, 64)
     t_md5 = time.perf_counter() - start
-    
+
     start = time.perf_counter()
     generate_mac(key, msg, sha512_manual, 128)
     t_sha = time.perf_counter() - start
-    
+
     results.append((size, t_md5, t_sha))
     print(f"{size:<15} | {t_md5:<20.6f} | {t_sha:<20.6f}")
 
 plot_results(results)
-
